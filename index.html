@@ -5,14 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mijn Planning</title>
     
-    <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#667eea">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Mijn Planning">
     <meta name="description" content="Overzicht en rust in je dag">
     
-    <!-- App Icons -->
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="manifest" href="manifest.json">
@@ -24,7 +22,7 @@
         <header>
             <h1>Mijn Planning</h1>
             <p class="subtitle">Overzicht en rust in je dag</p>
-            <button id="notificationBtn" class="notification-toggle">ðŸ”• Notificaties uit</button>
+            <button id="notificationBtn" class="notification-toggle">Notificaties uit</button>
         </header>
 
         <div class="add-task-section">
@@ -78,9 +76,7 @@
         </div>
 
         <div class="tasks-container">
-            <div id="tasksList" class="tasks-list">
-                <!-- Taken komen hier -->
-            </div>
+            <div id="tasksList" class="tasks-list"></div>
 
             <div class="empty-state" id="emptyState">
                 <div class="empty-icon">&#127881;</div>
@@ -105,12 +101,11 @@
         </div>
     </div>
 
-    <!-- Notification Modal -->
     <div id="notificationModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>ðŸ”” Notificaties</h2>
-                <button id="closeModal" class="close-btn">âœ•</button>
+                <h2 id="modalTitle">Notificaties</h2>
+                <button id="closeModal" class="close-btn">X</button>
             </div>
             
             <div class="modal-body">
@@ -121,7 +116,7 @@
                 <button id="enableNotificationsBtn" class="enable-btn">Notificaties Aanzetten</button>
 
                 <div class="settings-section">
-                    <h3>â° Instellingen</h3>
+                    <h3 id="settingsTitle">Instellingen</h3>
                     
                     <div class="setting-item">
                         <label>Dagelijkse herinnering om:</label>
@@ -140,9 +135,9 @@
                     </div>
 
                     <div class="setting-info">
-                        <p>âœ… Dagelijkse ochtend herinnering</p>
-                        <p>âœ… Herinneringen voor taken met tijd</p>
-                        <p>âœ… Extra melding voor belangrijke taken (1 uur van tevoren)</p>
+                        <p id="setting1">Dagelijkse ochtend herinnering</p>
+                        <p id="setting2">Herinneringen voor taken met tijd</p>
+                        <p id="setting3">Extra melding voor belangrijke taken (1 uur van tevoren)</p>
                     </div>
 
                     <button id="saveSettingsBtn" class="save-btn">Opslaan</button>
@@ -156,6 +151,15 @@
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js').catch(function() {});
         }
+        
+        // Add emojis via JavaScript to avoid encoding issues
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('modalTitle').textContent = String.fromCodePoint(0x1F514) + ' Notificaties';
+            document.getElementById('settingsTitle').textContent = String.fromCodePoint(0x23F0) + ' Instellingen';
+            document.getElementById('setting1').textContent = String.fromCodePoint(0x2705) + ' Dagelijkse ochtend herinnering';
+            document.getElementById('setting2').textContent = String.fromCodePoint(0x2705) + ' Herinneringen voor taken met tijd';
+            document.getElementById('setting3').textContent = String.fromCodePoint(0x2705) + ' Extra melding voor belangrijke taken (1 uur van tevoren)';
+        });
     </script>
 </body>
 </html>
