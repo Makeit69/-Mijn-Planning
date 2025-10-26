@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mijn Planning</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Mijn Planning">
+    <meta name="description" content="Overzicht en rust in je dag">
+    
+    <!-- App Icons -->
+    <link rel="apple-touch-icon" href="icon.png">
+    <link rel="icon" type="image/png" href="icon.png">
+    <link rel="manifest" href="manifest.json">
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Mijn Planning</h1>
+            <p class="subtitle">Overzicht en rust in je dag</p>
+        </header>
+
+        <div class="add-task-section">
+            <input type="text" id="taskInput" placeholder="Wat moet je doen?" class="task-input">
+            
+            <div class="task-options">
+                <select id="categorySelect" class="category-select">
+                    <option value="persoonlijk">Persoonlijk</option>
+                    <option value="werk">Werk</option>
+                    <option value="boodschappen">Boodschappen</option>
+                    <option value="huishouden">Huishouden</option>
+                    <option value="gezondheid">Gezondheid</option>
+                    <option value="overig">Overig</option>
+                </select>
+
+                <select id="prioritySelect" class="priority-select">
+                    <option value="laag">Laag</option>
+                    <option value="normaal" selected>Normaal</option>
+                    <option value="hoog">Belangrijk</option>
+                </select>
+
+                <input type="date" id="dateInput" class="date-input">
+            </div>
+
+            <div class="task-options">
+                <input type="time" id="timeInput" class="time-input" placeholder="Tijd">
+                
+                <select id="durationSelect" class="duration-select">
+                    <option value="">Hoe lang?</option>
+                    <option value="15">15 min</option>
+                    <option value="30">30 min</option>
+                    <option value="45">45 min</option>
+                    <option value="60">1 uur</option>
+                    <option value="90">1,5 uur</option>
+                    <option value="120">2 uur</option>
+                    <option value="180">3 uur</option>
+                    <option value="240">4 uur</option>
+                </select>
+
+                <div class="spacer"></div>
+            </div>
+
+            <button id="addTaskBtn" class="add-btn">+ Taak Toevoegen</button>
+        </div>
+
+        <div class="filters">
+            <button class="filter-btn active" data-filter="all">Alles</button>
+            <button class="filter-btn" data-filter="today">Vandaag</button>
+            <button class="filter-btn" data-filter="week">Deze Week</button>
+            <button class="filter-btn" data-filter="important">Belangrijk</button>
+        </div>
+
+        <div class="tasks-container">
+            <div id="tasksList" class="tasks-list">
+                <!-- Taken komen hier -->
+            </div>
+
+            <div class="empty-state" id="emptyState">
+                <div class="empty-icon">&#127881;</div>
+                <p>Je hebt alles gedaan!</p>
+                <p class="empty-subtitle">Voeg een nieuwe taak toe om te beginnen</p>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-item">
+                <span class="stat-number" id="totalTasks">0</span>
+                <span class="stat-label">Totaal</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="completedTasks">0</span>
+                <span class="stat-label">Voltooid</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="remainingTasks">0</span>
+                <span class="stat-label">Te doen</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        // Register service worker for offline support
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(function() {
+                // Silent fail if service worker not supported
+            });
+        }
+    </script>
+</body>
+</html>

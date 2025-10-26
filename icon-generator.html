@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head><title>Icon Generator</title></head>
+<body>
+<canvas id="canvas" width="512" height="512"></canvas>
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+// Background gradient
+const gradient = ctx.createLinearGradient(0, 0, 512, 512);
+gradient.addColorStop(0, '#667eea');
+gradient.addColorStop(1, '#764ba2');
+ctx.fillStyle = gradient;
+ctx.fillRect(0, 0, 512, 512);
+
+// White checkmark circle background
+ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+ctx.beginPath();
+ctx.arc(256, 256, 180, 0, Math.PI * 2);
+ctx.fill();
+
+// Checkmark
+ctx.strokeStyle = '#667eea';
+ctx.lineWidth = 35;
+ctx.lineCap = 'round';
+ctx.lineJoin = 'round';
+ctx.beginPath();
+ctx.moveTo(160, 256);
+ctx.lineTo(220, 316);
+ctx.lineTo(350, 184);
+ctx.stroke();
+
+// Download
+const link = document.createElement('a');
+link.download = 'icon.png';
+link.href = canvas.toDataURL();
+link.click();
+</script>
+</body>
+</html>
