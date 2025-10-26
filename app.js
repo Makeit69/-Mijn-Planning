@@ -1,6 +1,14 @@
 // State
 let tasks = [];
 let currentFilter = 'all';
+let notificationSettings = {
+    enabled: false,
+    dailyReminder: true,
+    dailyReminderTime: '09:00',
+    taskReminders: true,
+    reminderMinutes: 15,
+    importantTaskExtra: true
+};
 
 // DOM Elements
 const taskInput = document.getElementById('taskInput');
@@ -16,6 +24,13 @@ const filterBtns = document.querySelectorAll('.filter-btn');
 const totalTasksEl = document.getElementById('totalTasks');
 const completedTasksEl = document.getElementById('completedTasks');
 const remainingTasksEl = document.getElementById('remainingTasks');
+const notificationBtn = document.getElementById('notificationBtn');
+const notificationModal = document.getElementById('notificationModal');
+const enableNotificationsBtn = document.getElementById('enableNotificationsBtn');
+const closeModalBtn = document.getElementById('closeModal');
+const dailyTimeInput = document.getElementById('dailyTimeInput');
+const reminderMinutesInput = document.getElementById('reminderMinutesInput');
+const saveSettingsBtn = document.getElementById('saveSettingsBtn');
 
 // Set today's date
 function setTodayDate() {
@@ -24,6 +39,168 @@ function setTodayDate() {
     const month = String(today.getMonth() + 1).padStart(2, '0');
     const day = String(today.getDate()).padStart(2, '0');
     dateInput.value = year + '-' + month + '-' + day;
+}
+
+// Load notification settings
+function loadNotificationSettings() {
+    const saved = localStorage.getItem('notificationSettings');
+    if (saved) {
+        notificationSettings = JSON.parse(saved);
+        dailyTimeInput.value = notificationSettings.dailyReminderTime;
+        reminderMinutesInput.value = notificationSettings.reminderMinutes;
+        updateNotificationButton();
+    }
+}
+
+// Save notification settings
+function saveNotificationSettings() {
+    localStorage.setItem('notificationSettings', JSON.stringify(notificationSettings));
+}
+
+// Request notification permission
+async function requestNotificationPermission() {
+    if (!('Notification' in window)) {
+        alert('Je browser ondersteunt geen notificaties');
+        return false;
+    }
+    
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+        notificationSettings.enabled = true;
+        saveNotificationSettings();
+        updateNotificationButton();
+        scheduleAllNotifications();
+        showNotification('Notificaties aan!', 'Je krijgt nu herinneringen voor je taken');
+        return true;
+    } else {
+        alert('Notificaties zijn geblokkeerd. Sta ze toe in je browser instellingen.');
+        return false;
+    }
+}
+
+// Show notification
+function showNotification(title, body, tag) {
+    if (notificationSettings.enabled && Notification.permission === 'granted') {
+        new Notification(title, {
+            body: body,
+            icon: 'icon.png',
+            badge: 'icon.png',
+            tag: tag || 'mijn-planning',
+            requireInteraction: false
+        });
+    }
+}
+
+// Update notification button
+function updateNotificationButton() {
+    if (notificationSettings.enabled) {
+        notificationBtn.innerHTML = String.fromCodePoint(0x1F514) + ' Notificaties aan';
+        notificationBtn.classList.add('active');
+    } else {
+        notificationBtn.innerHTML = String.fromCodePoint(0x1F515) + ' Notificaties uit';
+        notificationBtn.classList.remove('active');
+    }
+}
+
+// Schedule daily reminder
+function scheduleDailyReminder() {
+    if (!notificationSettings.enabled || !notificationSettings.dailyReminder) return;
+    
+    const now = new Date();
+    const [hours, minutes] = notificationSettings.dailyReminderTime.split(':');
+    const scheduledTime = new Date();
+    scheduledTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+    
+    // If time has passed today, schedule for tomorrow
+    if (scheduledTime <= now) {
+        scheduledTime.setDate(scheduledTime.getDate() + 1);
+    }
+    
+    const timeUntil = scheduledTime.getTime() - now.getTime();
+    
+    setTimeout(() => {
+        checkDailyTasks();
+        scheduleDailyReminder(); // Reschedule for next day
+    }, timeUntil);
+}
+
+// Check daily tasks
+function checkDailyTasks() {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const todayTasks = tasks.filter(task => {
+        if (task.completed || !task.date) return false;
+        const taskDate = new Date(task.date);
+        taskDate.setHours(0, 0, 0, 0);
+        return taskDate.getTime() === today.getTime();
+    });
+    
+    if (todayTasks.length > 0) {
+        const importantCount = todayTasks.filter(t => t.priority === 'hoog').length;
+        let message = 'Je hebt ' + todayTasks.length + ' ' + (todayTasks.length === 1 ? 'taak' : 'taken') + ' voor vandaag';
+        if (importantCount > 0) {
+            message += ' (' + importantCount + ' belangrijk)';
+        }
+        showNotification('Goedemorgen!', message, 'daily-reminder');
+    } else {
+        showNotification('Goedemorgen!', 'Je agenda is leeg vandaag!', 'daily-reminder');
+    }
+}
+
+// Schedule task notifications
+function scheduleTaskNotifications() {
+    if (!notificationSettings.enabled || !notificationSettings.taskReminders) return;
+    
+    const now = new Date();
+    
+    tasks.forEach(task => {
+        if (task.completed || !task.date || !task.time) return;
+        
+        const [year, month, day] = task.date.split('-');
+        const [hours, minutes] = task.time.split(':');
+        const taskTime = new Date(year, month - 1, day, hours, minutes);
+        
+        // Schedule reminder before task
+        const reminderTime = new Date(taskTime.getTime() - (notificationSettings.reminderMinutes * 60 * 1000));
+        
+        if (reminderTime > now) {
+            const timeUntil = reminderTime.getTime() - now.getTime();
+            setTimeout(() => {
+                if (!task.completed) {
+                    const timeStr = task.time;
+                    showNotification(
+                        'Herinnering: ' + task.text,
+                        'Over ' + notificationSettings.reminderMinutes + ' minuten (' + timeStr + ')',
+                        'task-' + task.id
+                    );
+                }
+            }, timeUntil);
+        }
+        
+        // Extra reminder for important tasks (1 hour before)
+        if (task.priority === 'hoog' && notificationSettings.importantTaskExtra) {
+            const hourBeforeTime = new Date(taskTime.getTime() - (60 * 60 * 1000));
+            if (hourBeforeTime > now) {
+                const timeUntil = hourBeforeTime.getTime() - now.getTime();
+                setTimeout(() => {
+                    if (!task.completed) {
+                        showNotification(
+                            String.fromCodePoint(0x26A0) + ' Belangrijke taak!',
+                            task.text + ' - Over 1 uur (' + task.time + ')',
+                            'important-' + task.id
+                        );
+                    }
+                }, timeUntil);
+            }
+        }
+    });
+}
+
+// Schedule all notifications
+function scheduleAllNotifications() {
+    scheduleDailyReminder();
+    scheduleTaskNotifications();
 }
 
 // Load tasks from localStorage
@@ -38,6 +215,7 @@ function loadTasks() {
 // Save tasks to localStorage
 function saveTasks() {
     localStorage.setItem('tasks', JSON.stringify(tasks));
+    scheduleTaskNotifications(); // Reschedule when tasks change
 }
 
 // Add task
@@ -67,7 +245,7 @@ function addTask() {
     
     // Reset form
     taskInput.value = '';
-    setTodayDate(); // Reset to today's date
+    setTodayDate();
     timeInput.value = '';
     durationSelect.value = '';
     prioritySelect.value = 'normaal';
@@ -140,7 +318,6 @@ function formatDate(dateString) {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
     
-    // Reset time for comparison
     today.setHours(0, 0, 0, 0);
     tomorrow.setHours(0, 0, 0, 0);
     date.setHours(0, 0, 0, 0);
@@ -201,7 +378,6 @@ function filterTasks() {
 function renderTasks() {
     const filteredTasks = filterTasks();
     
-    // Update stats
     const total = tasks.length;
     const completed = tasks.filter(t => t.completed).length;
     const remaining = total - completed;
@@ -210,7 +386,6 @@ function renderTasks() {
     completedTasksEl.textContent = completed;
     remainingTasksEl.textContent = remaining;
     
-    // Show/hide empty state
     if (filteredTasks.length === 0) {
         emptyState.classList.remove('hidden');
         tasksList.innerHTML = '';
@@ -219,7 +394,6 @@ function renderTasks() {
         emptyState.classList.add('hidden');
     }
     
-    // Render task items
     tasksList.innerHTML = filteredTasks.map(task => createTaskHTML(task)).join('');
 }
 
@@ -250,7 +424,7 @@ function createTaskHTML(task) {
     '</div>';
 }
 
-// Escape HTML to prevent XSS
+// Escape HTML
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
@@ -275,7 +449,41 @@ filterBtns.forEach(btn => {
     });
 });
 
+notificationBtn.addEventListener('click', () => {
+    notificationModal.classList.add('show');
+});
+
+closeModalBtn.addEventListener('click', () => {
+    notificationModal.classList.remove('show');
+});
+
+enableNotificationsBtn.addEventListener('click', async () => {
+    await requestNotificationPermission();
+});
+
+saveSettingsBtn.addEventListener('click', () => {
+    notificationSettings.dailyReminderTime = dailyTimeInput.value;
+    notificationSettings.reminderMinutes = parseInt(reminderMinutesInput.value);
+    saveNotificationSettings();
+    scheduleAllNotifications();
+    notificationModal.classList.remove('show');
+    showNotification('Instellingen opgeslagen!', 'Je notificaties zijn bijgewerkt');
+});
+
+// Close modal on outside click
+notificationModal.addEventListener('click', (e) => {
+    if (e.target === notificationModal) {
+        notificationModal.classList.remove('show');
+    }
+});
+
 // Initialize
-setTodayDate(); // Set today's date on load
+setTodayDate();
 loadTasks();
+loadNotificationSettings();
 taskInput.focus();
+
+// Schedule notifications if enabled
+if (notificationSettings.enabled) {
+    scheduleAllNotifications();
+}

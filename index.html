@@ -24,6 +24,7 @@
         <header>
             <h1>Mijn Planning</h1>
             <p class="subtitle">Overzicht en rust in je dag</p>
+            <button id="notificationBtn" class="notification-toggle">ðŸ”• Notificaties uit</button>
         </header>
 
         <div class="add-task-section">
@@ -104,13 +105,56 @@
         </div>
     </div>
 
+    <!-- Notification Modal -->
+    <div id="notificationModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>ðŸ”” Notificaties</h2>
+                <button id="closeModal" class="close-btn">âœ•</button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="notification-info">
+                    <p>Krijg herinneringen voor je taken!</p>
+                </div>
+
+                <button id="enableNotificationsBtn" class="enable-btn">Notificaties Aanzetten</button>
+
+                <div class="settings-section">
+                    <h3>â° Instellingen</h3>
+                    
+                    <div class="setting-item">
+                        <label>Dagelijkse herinnering om:</label>
+                        <input type="time" id="dailyTimeInput" value="09:00" class="setting-input">
+                    </div>
+
+                    <div class="setting-item">
+                        <label>Herinner me voor een taak:</label>
+                        <select id="reminderMinutesInput" class="setting-input">
+                            <option value="5">5 minuten van tevoren</option>
+                            <option value="10">10 minuten van tevoren</option>
+                            <option value="15" selected>15 minuten van tevoren</option>
+                            <option value="30">30 minuten van tevoren</option>
+                            <option value="60">1 uur van tevoren</option>
+                        </select>
+                    </div>
+
+                    <div class="setting-info">
+                        <p>âœ… Dagelijkse ochtend herinnering</p>
+                        <p>âœ… Herinneringen voor taken met tijd</p>
+                        <p>âœ… Extra melding voor belangrijke taken (1 uur van tevoren)</p>
+                    </div>
+
+                    <button id="saveSettingsBtn" class="save-btn">Opslaan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="app.js"></script>
     <script>
-        // Register service worker for offline support
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js').catch(function() {
-                // Silent fail if service worker not supported
-            });
+            navigator.serviceWorker.register('sw.js').catch(function() {});
         }
     </script>
 </body>
